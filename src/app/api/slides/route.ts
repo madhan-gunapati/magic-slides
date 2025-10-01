@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import PptxGenJS from "pptxgenjs";
+
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
-const generatePPTStreamData = async(data)=>{
-     let pptx = new PptxGenJS();
+async function generatePPTStreamData(data: any) {
+  let pptx = new PptxGenJS();
 
   // Add content slides
-  data.slides.forEach((slideData) => {
+  data.slides.forEach((slideData: any) => {
     let slide = pptx.addSlide();
 
     // Slide Title
@@ -39,12 +40,9 @@ const generatePPTStreamData = async(data)=>{
     }
   });
 
-  const buffer = await pptx.stream(); // Get the presentation as a buffer
-
-return buffer
-   
-
-
+  // Return ArrayBuffer for download
+  const buffer = await pptx.write("arraybuffer");
+  return buffer;
 }
 
 export async function POST(req: Request) {
@@ -80,19 +78,26 @@ No markdown, only JSON.
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-    
-    
-    const trimmed_text = text.slice(8,-3) //trimming ```json{ .... } part
-    
-     const data = JSON.parse(trimmed_text);
 
-    const generated_buffer = generatePPTStreamData(data)
-     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
-    res.setHeader('Content-Disposition', 'attachment; filename="ServerPresentation.pptx"');
-    res.send(generated_buffer);
-    
+    // Clean up JSON (sometimes Gemini outputs ```json ... ```)
+    let cleaned = text.trim();
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/```json|```/g, "").trim();
+    }
 
-    return NextResponse.json(data);
+    const data = JSON.parse(cleaned);
+
+    // Generate PPT buffer
+    const buffer = await generatePPTStreamData(data);
+
+    // Return as downloadable PPT
+    return new NextResponse(Buffer.from(buffer), {
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "Content-Disposition": 'attachment; filename="ServerPresentation.pptx"',
+      },
+    });
   } catch (err: any) {
     console.error("Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });

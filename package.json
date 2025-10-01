@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@nutrient-sdk/node": "^1.1.0",
     "next": "15.5.4",
     "pptxgenjs": "^4.0.1",
     "react": "19.1.0",

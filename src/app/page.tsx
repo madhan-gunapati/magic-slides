@@ -1,5 +1,6 @@
 'use client'
 
+import { title } from "process"
 import { useState } from "react"
 import {v4 as uuidV4} from 'uuid'
 // import PptxGenJS from "pptxgenjs"
@@ -8,6 +9,8 @@ const Home = ()=>{
   const [input, setInput]  = useState('')
   const [chatVisibility , setChatVisibilty] = useState(false)
   const [chatList, setChatList] = useState([])
+   const [pptUrl, setPptUrl] = useState("");
+   const [fileName, setFilename] = useState('')
 
   
 const changeInputText = (e)=>{
@@ -15,12 +18,7 @@ const changeInputText = (e)=>{
 
   }
 
-const generatePPT =async (data)=>{
-   
-    
 
-  
-}
 
 const fetchData = async(value)=>{
     const url = './api/slides'
@@ -34,9 +32,19 @@ const fetchData = async(value)=>{
       body:JSON.stringify({title:value})
     }
     const res = await fetch(url, options)
-    const json_result = await res.json()
-    console.log('json result '  , json_result)
-    generatePPT(json_result)
+    if (!res.ok) {
+      console.error("Failed to fetch PPT:", res.statusText);
+      return;
+    }
+
+    // Read response as Blob
+    const blob = await res.blob();
+
+    // Convert to previewable URL
+    const fileUrl = URL.createObjectURL(blob);
+    setPptUrl(fileUrl);
+    
+    
   }
 
 const addUserChat = (e)=>{
@@ -47,6 +55,7 @@ const addUserChat = (e)=>{
         return temp_list })
     
       fetchData(input) 
+      setFilename(input)
       setInput('')
   }
   
@@ -65,6 +74,27 @@ const addUserChat = (e)=>{
       
       {chatList.map((item)=><li key={uuidV4()} className={`${item.source==='user'? 'self-end':'self-start'} bg-black font-bold text-white w-fit p-2 rounded m-2`}>{item.msg}</li>)}
     </ul>
+     {pptUrl && (
+        <div className="mt-6">
+          <h2 className="text-lg font-bold mb-2">PPT Preview:</h2>
+          <iframe
+            src={pptUrl}
+            width="100%"
+            height="600"
+            className="border"
+            title="PPT Preview"
+          ></iframe>
+
+          {/* Optional: download link */}
+          <a
+            href={pptUrl}
+            download={`${fileName}.pptx`}
+            className="mt-3 inline-block text-blue-500 underline"
+          >
+            Download PPT
+          </a>
+        </div>
+      )}
     </div>
 <div className=" fixed bottom-0">
     <input type="text" className="bg-gray-100 p-3  h-1/12 rounded m-5 ml-10 font-semibold w-11/12"  placeholder="Start with a topic , we'll turn it into slides!" value={input} onChange={changeInputText} />
