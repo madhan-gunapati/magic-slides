@@ -108,8 +108,10 @@ No markdown, only JSON.
         "Content-Disposition": 'attachment; filename="ServerPresentation.pptx"',
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error generating PPT:", err);
+    if(err instanceof Error){
     return NextResponse.json({ error: err.message }, { status: 500 });
+    }
   }
 }
