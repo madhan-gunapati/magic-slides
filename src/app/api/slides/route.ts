@@ -53,7 +53,27 @@ async function generatePPTStreamData(data: PPTData): Promise<ArrayBuffer> {
     }
   });
 
-  return await pptx.write("arraybuffer");
+  const result = await pptx.write({ outputType: "arraybuffer" });
+  if (result instanceof ArrayBuffer) {
+    return result;
+  } else if (result instanceof Uint8Array) {
+    return result.buffer instanceof ArrayBuffer && !(result.buffer instanceof SharedArrayBuffer)
+      ? result.buffer
+      : new Uint8Array(result).buffer;
+  } else if (typeof result === "string") {
+    // Convert base64 string to ArrayBuffer
+    const binaryString = atob(result);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  } else if (result instanceof Blob) {
+    return await result.arrayBuffer();
+  } else {
+    throw new Error("Unexpected PPTX output type");
+  }
 }
 
 export async function POST(req: Request) {
