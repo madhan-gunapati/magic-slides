@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import PptxGenJS from "pptxgenjs";
+import { slides } from "googleapis/build/src/apis/slides";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
 async function generatePPTStreamData(data: any) {
   let pptx = new PptxGenJS();
-
+    console.log(data.slides)
   // Add content slides
   data.slides.forEach((slideData: any) => {
     let slide = pptx.addSlide();
@@ -62,14 +63,14 @@ Task:
    Each slide must have:
    - title (short, 3–6 words)
    - text (1–3 sentences, concise)
-   - image (relevant royalty-free/public image link or null)
+   - image (relevant  image link  from websites)
 
 Output JSON strictly in this format:
 {
   "references": ["url1", "url2", "url3"],
   "slides": [
     { "title": "Slide 1 Title", "text": "Short content.", "image": "https://..." },
-    { "title": "Slide 2 Title", "text": "Short content.", "image": null }
+    { "title": "Slide 2 Title", "text": "Short content.", "https://..." }
   ]
 }
 No markdown, only JSON.
