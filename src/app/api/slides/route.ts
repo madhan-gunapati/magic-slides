@@ -1,16 +1,28 @@
+'use server';
+
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import PptxGenJS from "pptxgenjs";
-import { slides } from "googleapis/build/src/apis/slides";
+
+// Type definitions for slides
+interface SlideData {
+  title: string;
+  text: string;
+  image?: string;
+}
+
+interface PPTData {
+  references: string[];
+  slides: SlideData[];
+}
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
-async function generatePPTStreamData(data: any) {
-  let pptx = new PptxGenJS();
-    console.log(data.slides)
-  // Add content slides
-  data.slides.forEach((slideData: any) => {
-    let slide = pptx.addSlide();
+async function generatePPTStreamData(data: PPTData): Promise<ArrayBuffer> {
+  const pptx = new PptxGenJS();
+
+  data.slides.forEach((slideData) => {
+    const slide = pptx.addSlide();
 
     // Slide Title
     slide.addText(slideData.title, {
@@ -41,14 +53,12 @@ async function generatePPTStreamData(data: any) {
     }
   });
 
-  // Return ArrayBuffer for download
-  const buffer = await pptx.write("arraybuffer");
-  return buffer;
+  return await pptx.write("arraybuffer");
 }
 
 export async function POST(req: Request) {
   try {
-    const { title } = await req.json();
+    const { title } = (await req.json()) as { title: string };
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
@@ -63,14 +73,14 @@ Task:
    Each slide must have:
    - title (short, 3–6 words)
    - text (1–3 sentences, concise)
-   - image (relevant  image link  from websites)
+   - image (relevant image link from websites)
 
 Output JSON strictly in this format:
 {
   "references": ["url1", "url2", "url3"],
   "slides": [
     { "title": "Slide 1 Title", "text": "Short content.", "image": "https://..." },
-    { "title": "Slide 2 Title", "text": "Short content.", "https://..." }
+    { "title": "Slide 2 Title", "text": "Short content.", "image": "https://..." }
   ]
 }
 No markdown, only JSON.
@@ -78,20 +88,19 @@ No markdown, only JSON.
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
+
+    let text = await response.text();
 
     // Clean up JSON (sometimes Gemini outputs ```json ... ```)
-    let cleaned = text.trim();
-    if (cleaned.startsWith("```")) {
-      cleaned = cleaned.replace(/```json|```/g, "").trim();
+    if (text.startsWith("```")) {
+      text = text.replace(/```json|```/g, "").trim();
     }
 
-    const data = JSON.parse(cleaned);
+    const data: PPTData = JSON.parse(text);
 
     // Generate PPT buffer
     const buffer = await generatePPTStreamData(data);
 
-    // Return as downloadable PPT
     return new NextResponse(Buffer.from(buffer), {
       headers: {
         "Content-Type":
@@ -100,7 +109,7 @@ No markdown, only JSON.
       },
     });
   } catch (err: any) {
-    console.error("Error:", err);
+    console.error("Error generating PPT:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -1,22 +1,27 @@
 'use client'
 
-import { useState } from "react"
+import { useState, ChangeEvent } from "react"
 import { v4 as uuidV4 } from 'uuid'
 
+interface ChatItem {
+  source: 'user' | 'bot'
+  msg: string
+}
+
 const Home = () => {
-  const [input, setInput] = useState('')
-  const [chatVisibility, setChatVisibility] = useState(false)
-  const [chatList, setChatList] = useState([])
-  const [pptUrl, setPptUrl] = useState("")
-  const [fileName, setFileName] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [input, setInput] = useState<string>('')
+  const [chatVisibility, setChatVisibility] = useState<boolean>(false)
+  const [chatList, setChatList] = useState<ChatItem[]>([])
+  const [pptUrl, setPptUrl] = useState<string>('')
+  const [fileName, setFileName] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
 
-  const changeInputText = (e) => setInput(e.target.value)
+  const changeInputText = (e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)
 
-  const fetchData = async (value) => {
+  const fetchData = async (value: string) => {
     setLoading(true)
-    const url = './api/slides'
-    const options = {
+    const url = '/api/slides'
+    const options: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
