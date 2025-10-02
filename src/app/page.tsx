@@ -2,7 +2,8 @@
 
 import { useState, ChangeEvent } from "react"
 import { v4 as uuidV4 } from 'uuid'
-import SlidePreview from "./components/Slidepreview/page"
+
+import SlidePreview from "./components/SlidePreview"
 
 interface ChatItem {
   source: 'user' | 'bot'
