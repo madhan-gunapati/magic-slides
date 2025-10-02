@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import PptxGenJS from "pptxgenjs";
+
 
 // Type definitions for slides
 interface SlideData {
@@ -18,63 +18,8 @@ interface PPTData {
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
-async function generatePPTStreamData(data: PPTData): Promise<ArrayBuffer> {
-  const pptx = new PptxGenJS();
 
-  data.slides.forEach((slideData) => {
-    const slide = pptx.addSlide();
-
-    // Slide Title
-    slide.addText(slideData.title, {
-      x: 0.5,
-      y: 0.5,
-      fontSize: 24,
-      bold: true,
-    });
-
-    // Slide Text
-    slide.addText(slideData.text, {
-      x: 0.5,
-      y: 1.2,
-      fontSize: 14,
-      color: "363636",
-      w: 8,
-    });
-
-    // Slide Image (if available)
-    if (slideData.image) {
-      slide.addImage({
-        path: slideData.image,
-        x: 0.5,
-        y: 2,
-        w: 7,
-        h: 3.5,
-      });
-    }
-  });
-
-  const result = await pptx.write({ outputType: "arraybuffer" });
-  if (result instanceof ArrayBuffer) {
-    return result;
-  } else if (result instanceof Uint8Array) {
-    return result.buffer instanceof ArrayBuffer && !(result.buffer instanceof SharedArrayBuffer)
-      ? result.buffer
-      : new Uint8Array(result).buffer;
-  } else if (typeof result === "string") {
-    // Convert base64 string to ArrayBuffer
-    const binaryString = atob(result);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
-  } else if (result instanceof Blob) {
-    return await result.arrayBuffer();
-  } else {
-    throw new Error("Unexpected PPTX output type");
-  }
-}
+  
 
 export async function POST(req: Request) {
   try {
@@ -93,14 +38,14 @@ Task:
    Each slide must have:
    - title (short, 3–6 words)
    - text (1–3 sentences, concise)
-   - image (relevant image link from websites)
+   - image (direct, working image link in JPG/PNG/WebP format from a reliable source such as  Pexels,  or other open-license image hosts. Avoid homepage URLs, PDFs, or non-image links.)
 
 Output JSON strictly in this format:
 {
   "references": ["url1", "url2", "url3"],
   "slides": [
-    { "title": "Slide 1 Title", "text": "Short content.", "image": "https://..." },
-    { "title": "Slide 2 Title", "text": "Short content.", "image": "https://..." }
+    { "title": "Slide 1 Title", "text": "Short content.", "image": "https://working-image-link.jpg"},
+    { "title": "Slide 2 Title", "text": "Short content.", "image": "https://working-image-link.jpg" }
   ]
 }
 No markdown, only JSON.
@@ -118,16 +63,9 @@ No markdown, only JSON.
 
     const data: PPTData = JSON.parse(text);
 
-    // Generate PPT buffer
-    const buffer = await generatePPTStreamData(data);
+    
 
-    return new NextResponse(Buffer.from(buffer), {
-      headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "Content-Disposition": 'attachment; filename="ServerPresentation.pptx"',
-      },
-    });
+    return new NextResponse(JSON.stringify({data}));
   } catch (err: unknown) {
     console.error("Error generating PPT:", err);
     if(err instanceof Error){

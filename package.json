@@ -14,11 +14,13 @@
     "cloudconvert": "^3.0.0",
     "googleapis": "^161.0.0",
     "jspdf": "^3.0.3",
+    "lucide-react": "^0.544.0",
     "next": "15.5.4",
     "pptx-parser": "^1.1.7-beta.9",
     "pptxgenjs": "^4.0.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "reveal.js": "^5.2.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
