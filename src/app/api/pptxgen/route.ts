@@ -16,56 +16,67 @@ export async function POST(req: NextRequest) {
 slides.forEach((slide: Slide, index: number) => {
   const s = pptx.addSlide();
 
-  // Background
-  s.background = { fill: "4B5563" }; // gray-600
-
-  // Title (full width)
-  s.addText(slide.title, {
-    x: 0,
-    y: 0.3,
-    w: 10, // full slide width
-    h: 1,
-    align: "center",
-    fontSize: 28,
-    bold: true,
-    color: "FFFFFF",
-    valign: "middle",
+  // Green Background (right ~60% of slide)
+  s.addShape(pptx.ShapeType.rect, {
+    x: 3,        // start at 40% of slide width
+    y: 0,
+    w:'70%',        // remaining 60%
+    h: '100%',
+    fill: { color: "4B5563" },
+    line: { color: "4B5563" },
   });
 
-  // Image (centered with margins)
+  // Image (left side)
   if (slide.image) {
     s.addImage({
       path: slide.image,
-      x: 1,
-      y: 1.5,
-      w: 8,
-      h: 3.5,
+      x: 0.7,
+      y: 1.1,
+      w: '30%',
+      h: '70%',
+      
     });
   }
 
-  // Text (full width)
-  s.addText(slide.text, {
-    x: 0,
-    y: 5.2,
-    w: 10, // full slide width
-    h: 1.5,
+  // Title inside green section
+  s.addText(slide.title, {
+    x: 4,
+    y: 1.2,
+    w: '60%',
+    h: 1,
     align: "center",
-    fontSize: 16,
+    fontSize: 32,
+    bold: true,
     color: "FFFFFF",
     valign: "middle",
+    wrap: true,
+  });
+
+  // Subtitle inside green section
+  s.addText(slide.text, {
+    x: 4,
+    y: 2.5,
+    w: '60%',
+    h: 0.8,
+    color: "FFFFFF",
+    fontSize: 16,
+    valign: "top",
+    wrap: true,
   });
 
   // Page number (bottom right)
   s.addText(`${index + 1} / ${slides.length}`, {
-    x: 9,
-    y: 7.1, // bottom margin
-    w: 1,
-    h: 0.3,
+    x: "95%",
+    y: "95%",
+    w: 1.2,
+    h: 0.4,
     fontSize: 12,
     color: "DDDDDD",
     align: "right",
+    valign: "bottom",
   });
 });
+
 
 
   // Generate PPT as base64 and send as blob response

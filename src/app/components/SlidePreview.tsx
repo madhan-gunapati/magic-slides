@@ -17,26 +17,31 @@ const SlidePreview = ({ slides }: SlidePreviewProps) => {
         {slides.map((slide, index) => (
           <div
             key={index}
-            className="relative w-[80%] min-h-[60vh] bg-gradient-to-r from-gray-600 to-cyan-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col text-white p-10 transform transition hover:scale-[1.02]"
+            className="relative w-[80%] min-h-[60vh] rounded-2xl shadow-2xl overflow-hidden flex"
           >
-            {/* Title */}
-            <h2 className="text-3xl font-extrabold text-center mb-6 tracking-wide drop-shadow-md">
-              {slide.title}
-            </h2>
+            {/* Left side: Image */}
+            {slide.image && (
+              <div className="w-[40%]   flex items-center justify-center p-4">
+                <img
+                  src={slide.image}
+                  alt={slide.title}
+                  className="w-full h-[60%] rounded-lg "
+                />
+              </div>
+            )}
 
-            {/* Image */}
-            <div className="flex-1 flex items-center justify-center">
-              <img
-                src={slide.image}
-                alt={slide.title}
-                className="w-[80%] max-h-[40vh] object-contain rounded-lg shadow-lg"
-              />
+            {/* Right side: Green background with Title and Text */}
+            <div className="w-[80%] bg-[#4B5563] flex flex-col justify-center items-center p-8 gap-4 text-white">
+              {/* Title */}
+              <h2 className="text-3xl font-extrabold text-center drop-shadow-md">
+                {slide.title}
+              </h2>
+
+              {/* Text */}
+              <p className="text-lg text-center leading-relaxed opacity-90">
+                {slide.text}
+              </p>
             </div>
-
-            {/* Text */}
-            <p className="text-lg text-center mt-6 leading-relaxed opacity-90">
-              {slide.text}
-            </p>
 
             {/* Page number */}
             <div className="absolute bottom-4 right-6 text-sm text-gray-300">
@@ -48,5 +53,6 @@ const SlidePreview = ({ slides }: SlidePreviewProps) => {
     </div>
   )
 }
+
 
 export default SlidePreview

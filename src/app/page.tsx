@@ -96,7 +96,8 @@ const Home = () => {
     // Create a temporary link
     const link = document.createElement("a");
     link.href = fileUrl;
-    link.download = `${input}.pptx`; // filename
+    
+    link.download = `${title}.pptx`; // filename
     document.body.appendChild(link);
     link.click();
 
