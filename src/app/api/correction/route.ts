@@ -30,6 +30,7 @@ Task:
 
 Output strictly valid JSON in this format:
 {
+    "response_msg":text resoponse according to title", 
   
   "slides": [
     { "title": "Slide 1 Title", "text": "Short content.", "image": "https://working-image-link.jpg" },

@@ -8,6 +8,7 @@ import { title } from "process"
 interface ChatItem {
   source: 'user' | 'bot'
   msg: string
+  references?:string[]
 }
 
 const Home = () => {
@@ -31,9 +32,11 @@ const Home = () => {
       })
       const { data } = await res.json()
       setSlidesData(data.slides)
+      setChatList((p)=>[...p, {source:'bot' ,msg:`Fetched results about ${input} and showing preview. (Tip:currently this LLM halucinates about images, edit images using further prompts) Data Gathered From` , references:data.references}])
     } catch (err) {
       console.error("Failed to generate ppt", err)
     } finally {
+      
       setLoading(false)
     }
   }
@@ -48,6 +51,8 @@ const Home = () => {
       })
       const { data } = await res.json()
       setSlidesData(data.slides)
+      
+      setChatList((p)=>[...p, {source:'bot', msg:data.response_msg}])
     } catch (e) {
       console.error("Failed to correct Data:", e)
     } finally {
@@ -91,7 +96,7 @@ const Home = () => {
     // Create a temporary link
     const link = document.createElement("a");
     link.href = fileUrl;
-    link.download = `${title}.pptx`; // filename
+    link.download = `${input}.pptx`; // filename
     document.body.appendChild(link);
     link.click();
 
@@ -150,6 +155,18 @@ const Home = () => {
                   } font-medium px-4 py-2 rounded-xl shadow transition transform hover:scale-105`}
                 >
                   {item.msg}
+                  {item.references?(
+                    item.references.map((i)=><a
+                                     href={i}
+                                     target="_blank"
+    
+                                    className="text-blue-600 underline hover:text-blue-800"
+                                     key={i}
+                                     >
+                                      {i} <br/>
+                                    </a> 
+                                         ))
+                   :""}
                 </li>
               ))}
               {loading && (
