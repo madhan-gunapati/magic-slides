@@ -3,6 +3,7 @@
 import { useState, ChangeEvent } from "react"
 import { v4 as uuidV4 } from 'uuid'
 import SlidePreview from "./components/SlidePreview"
+import { title } from "process"
 
 interface ChatItem {
   source: 'user' | 'bot'
@@ -87,7 +88,7 @@ const Home = () => {
     // Create a temporary link
     const link = document.createElement("a");
     link.href = fileUrl;
-    link.download = "slides.pptx"; // filename
+    link.download = `${title}.pptx`; // filename
     document.body.appendChild(link);
     link.click();
 
