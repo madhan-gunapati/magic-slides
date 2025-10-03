@@ -62,6 +62,45 @@ const Home = () => {
     setInput('')
   }
 
+  const downloadPpt = async () => {
+  try {
+    const url = "/api/pptxgen";
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer 123456",
+      },
+      body: JSON.stringify({ slides: slidesData }),
+    };
+
+    const res = await fetch(url, options);
+
+    if (!res.ok) {
+      throw new Error(`Failed to download PPT: ${res.statusText}`);
+    }
+
+    // Get blob
+    const blob = await res.blob();
+    const fileUrl = URL.createObjectURL(blob);
+
+    // Create a temporary link
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = "slides.pptx"; // filename
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(fileUrl);
+
+  } catch (error) {
+    console.error("Error downloading PPT:", error);
+  }
+};
+
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
      
@@ -144,6 +183,7 @@ const Home = () => {
                 <button
                   type="button"
                   className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition"
+                  onClick={downloadPpt}
                 >
                   Download
                 </button>
