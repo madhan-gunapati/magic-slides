@@ -1,65 +1,72 @@
 import { NextRequest, NextResponse } from "next/server";
 import PptxGenJS from "pptxgenjs";
 
+interface Slide {
+  title: string;
+  text: string;
+  image?: string;
+}
+
 export async function POST(req: NextRequest) {
   const { slides } = await req.json();
 
   const pptx = new PptxGenJS();
 
   // Loop through slides JSON
-  slides.forEach((slide: any, index: number) => {
-    const s = pptx.addSlide();
+slides.forEach((slide: Slide, index: number) => {
+  const s = pptx.addSlide();
 
-// Solid background color (use a single color as gradients are not supported)
-s.background = {
-  fill: "4B5563" // gray-600 as solid background color
-};
+  // Background
+  s.background = { fill: "4B5563" }; // gray-600
 
-// gray-600 (#4B5563) as background (gradient not supported)
-
-    // Title
-    s.addText(slide.title, {
-      x: 0.5,
-      y: 0.3,
-      w: "90%",
-      h: 1,
-      align: "center",
-      fontSize: 28,
-      bold: true,
-      color: "FFFFFF",
-    });
-
-    // Image
-    if (slide.image) {
-      s.addImage({
-        path: slide.image,
-        x: "10%",
-        y: 1.5,
-        w: "80%",
-        h: 3.5,
-      });
-    }
-
-    // Text
-    s.addText(slide.text, {
-      x: 0.7,
-      y: 5.2,
-      w: "85%",
-      h: 1.5,
-      align: "center",
-      fontSize: 16,
-      color: "FFFFFF",
-    });
-
-    // Page number
-    s.addText(`${index + 1} / ${slides.length}`, {
-      x: 9,
-      y: 6.5,
-      fontSize: 12,
-      color: "DDDDDD",
-      align: "right",
-    });
+  // Title (full width)
+  s.addText(slide.title, {
+    x: 0,
+    y: 0.3,
+    w: 10, // full slide width
+    h: 1,
+    align: "center",
+    fontSize: 28,
+    bold: true,
+    color: "FFFFFF",
+    valign: "middle",
   });
+
+  // Image (centered with margins)
+  if (slide.image) {
+    s.addImage({
+      path: slide.image,
+      x: 1,
+      y: 1.5,
+      w: 8,
+      h: 3.5,
+    });
+  }
+
+  // Text (full width)
+  s.addText(slide.text, {
+    x: 0,
+    y: 5.2,
+    w: 10, // full slide width
+    h: 1.5,
+    align: "center",
+    fontSize: 16,
+    color: "FFFFFF",
+    valign: "middle",
+  });
+
+  // Page number (bottom right)
+  s.addText(`${index + 1} / ${slides.length}`, {
+    x: 9,
+    y: 7.1, // bottom margin
+    w: 1,
+    h: 0.3,
+    fontSize: 12,
+    color: "DDDDDD",
+    align: "right",
+  });
+});
+
 
   // Generate PPT as base64 and send as blob response
   const pptBuffer = await pptx.write({ outputType: "nodebuffer" });

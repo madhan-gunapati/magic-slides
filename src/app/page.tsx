@@ -17,6 +17,7 @@ const Home = () => {
   const [slidesData, setSlidesData] = useState([])
   const [loading, setLoading] = useState<boolean>(false)
   const [initialFetch , setInitialFetch] = useState(true)
+  const [downloading, setDownloading] = useState(false)
 
   const changeInputText = (e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)
 
@@ -64,6 +65,7 @@ const Home = () => {
   }
 
   const downloadPpt = async () => {
+    setDownloading(true)
   try {
     const url = "/api/pptxgen";
     const options = {
@@ -83,6 +85,7 @@ const Home = () => {
 
     // Get blob
     const blob = await res.blob();
+    setDownloading(false)
     const fileUrl = URL.createObjectURL(blob);
 
     // Create a temporary link
@@ -186,7 +189,7 @@ const Home = () => {
                   className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition"
                   onClick={downloadPpt}
                 >
-                  Download
+                  {downloading? 'Loading...': 'Download'}
                 </button>
               </div>
               <SlidePreview slides={slidesData} />
