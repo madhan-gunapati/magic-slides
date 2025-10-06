@@ -13,7 +13,7 @@ const History = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch('http://localhost:3000/api/history/conversations')
+      const res = await fetch('/api/history/conversations')
       const jsRes = await res.json()
       setConvList(jsRes.msg)
     }

@@ -72,7 +72,7 @@ const changeData = async (text: string) => {
         const options = {
             method:'POST'
         }
-        const res = await fetch(`http://localhost:3000/api/history/${conversation_id}` , options)
+        const res = await fetch(`/api/history/${conversation_id}` , options)
         const js_res = await res.json()
         setChatList(js_res.msgs || [])
         
