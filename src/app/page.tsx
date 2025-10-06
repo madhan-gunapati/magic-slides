@@ -4,7 +4,9 @@ import { useState, ChangeEvent } from "react"
 import { v4 as uuidV4 } from 'uuid'
 import SlidePreview from "./components/SlidePreview"
 import { title } from "process"
+import Link from "next/link"
 
+import { useRouter } from "next/navigation"
 interface ChatItem {
   source: 'user' | 'bot'
   msg: string
@@ -19,6 +21,8 @@ const Home = () => {
   const [loading, setLoading] = useState<boolean>(false)
   const [initialFetch , setInitialFetch] = useState(true)
   const [downloading, setDownloading] = useState(false)
+  const [conversation_id , setConversation_id] = useState('')
+  const router = useRouter()
 
   const changeInputText = (e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)
 
@@ -30,8 +34,9 @@ const Home = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: value })
       })
-      const { data } = await res.json()
+      const { data , conversation_id } = await res.json()
       setSlidesData(data.slides)
+      setConversation_id(conversation_id)
       setChatList((p)=>[...p, {source:'bot' ,msg:`Fetched results about ${input} and showing preview. (Tip:currently this LLM halucinates about images, edit images using further prompts) Data Gathered From` , references:data.references}])
     } catch (err) {
       console.error("Failed to generate ppt", err)
@@ -47,12 +52,12 @@ const Home = () => {
       const res = await fetch('/api/correction', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
-        body:JSON.stringify({ edit_statement:text , slides:slidesData })
+        body:JSON.stringify({ edit_statement:text , slides:slidesData  , conversation_id})
       })
       const { data } = await res.json()
       setSlidesData(data.slides)
       
-      setChatList((p)=>[...p, {source:'bot', msg:data.response_msg}])
+      setChatList((p)=>[...p, {source:'bot', msg:data.responseText}])
     } catch (e) {
       console.error("Failed to correct Data:", e)
     } finally {
@@ -134,6 +139,12 @@ const Home = () => {
               >
                 Send
               </button>
+              <button
+                className="ml-3 bg-black text-white px-6 rounded-lg font-bold hover:opacity-90 transition shadow"
+                onClick={()=>{router.push('./history')}}
+              >
+                History
+              </button>
             </div>
           </div>
         </div>
@@ -156,7 +167,7 @@ const Home = () => {
                   } font-medium px-4 py-2 rounded-xl shadow transition transform hover:scale-105`}
                 >
                   {item.msg}
-                  {item.references?(
+                  {item.references && item.references.length > 0?(
                     item.references.map((i)=><a
                                      href={i}
                                      target="_blank"
@@ -202,6 +213,7 @@ const Home = () => {
             <div className="w-full relative">
               <div className="absolute w-[100%] flex flex-row justify-between p-3 bg-gray-300 z-10 rounded-t-lg shadow-md">
                 <h2 className="font-bold">📑 Slide Preview</h2>
+                
                 <button
                   type="button"
                   className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition"
@@ -209,6 +221,8 @@ const Home = () => {
                 >
                   {downloading? 'Loading...': 'Download'}
                 </button>
+                 <Link href='/history'  className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition">History</Link>
+            <Link href='/'  className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition">New Chat</Link>
               </div>
               <SlidePreview slides={slidesData} />
             </div>

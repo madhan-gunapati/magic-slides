@@ -1,9 +1,11 @@
 'use client'
 
 interface Slide {
+  id:string
   title: string
   text: string
   image: string
+  conversation_id:string
 }
 
 interface SlidePreviewProps {

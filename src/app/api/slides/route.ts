@@ -2,7 +2,8 @@
 
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-
+import { PrismaClient } from "@prisma/client";
+const prismaClient = new PrismaClient();
 
 // Type definitions for slides
 interface SlideData {
@@ -39,7 +40,7 @@ Task:
    - title (short, 3–6 words)
    - text (1–3 sentences, concise)
    - image (direct, working image link in JPG/PNG/WebP format from a reliable source such as  Pexels,  or other open-license image hosts. Avoid homepage URLs, PDFs, or non-image links.)
-
+    
 Output JSON strictly in this format:
 {
   "references": ["url1", "url2", "url3"],
@@ -63,9 +64,38 @@ No markdown, only JSON.
 
     const data: PPTData = JSON.parse(text);
 
+    const conversation = await prismaClient.conversation.create({ data:{
+        title,
+        references:data.references, 
+        slides:{
+          create: data.slides.map(slide => ({
+            ...slide,
+            image: slide.image ?? ""
+          }))
+
+          },
+          msgs: {
+            create: [
+              {
+                sender: 'user',
+                content:title
+              },
+              {
+                sender:'bot',
+                content:`Fetched results about ${title} and showing preview. (Tip:currently this LLM halucinates about images, edit images using further prompts) Data Gathered From `,
+                references:data.references
+              }
+            ]
+          }
+        }
+      }
+     
+    )
+    const slides = await prismaClient.slide.findMany({ where: { conversationId: conversation.id } })
+    data.slides = slides
     
 
-    return new NextResponse(JSON.stringify({data}));
+    return new NextResponse(JSON.stringify({data,conversation_id: conversation.id}));
   } catch (err: unknown) {
     console.error("Error generating PPT:", err);
     if(err instanceof Error){
