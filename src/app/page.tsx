@@ -37,7 +37,7 @@ const Home = () => {
       const { data , conversation_id } = await res.json()
       setSlidesData(data.slides)
       setConversation_id(conversation_id)
-      setChatList((p)=>[...p, {source:'bot' ,msg:`Fetched results about ${input} and showing preview. (Tip:currently this LLM halucinates about images, edit images using further prompts) Data Gathered From` , references:data.references}])
+      setChatList((p)=>[...p, {source:'bot' ,msg:`(Tip:currently this AI may give irrelevant images, get your desired image url from google and ask this AI to put that in respec. slide). Fetched results about ${input} and showing preview.  Data Gathered From` , references:data.references}])
     } catch (err) {
       console.error("Failed to generate ppt", err)
     } finally {

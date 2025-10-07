@@ -5,7 +5,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { PrismaClient } from "@prisma/client";
 const prismaClient = new PrismaClient();
 
-// Type definitions for slides
 interface SlideData {
   title: string;
   text: string;
@@ -17,89 +16,129 @@ interface PPTData {
   slides: SlideData[];
 }
 
+const GOOGLE_API_KEY = process.env.GOOGLE_SEARCH_KEY!;
+const SEARCH_ENGINE_ID = process.env.GOOGLE_SEARCH_CX!;
+
+async function getImageUrls(title: string) {
+  const query = encodeURIComponent(title);
+  const url = `https://www.googleapis.com/customsearch/v1?q=${query}&cx=${SEARCH_ENGINE_ID}&key=${GOOGLE_API_KEY}&searchType=image&num=10`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.items) {
+      console.error("No results found or API limit reached:", data);
+      return [];
+    }
+
+    interface GoogleImageItem {
+      link: string;
+      [key: string]: unknown;
+    }
+    return data.items.map((item: GoogleImageItem) => item.link);
+  } catch (err) {
+    console.error("Error fetching images:", err);
+    return [];
+  }
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
-
-
-  
 
 export async function POST(req: Request) {
   try {
     const { title } = (await req.json()) as { title: string };
 
+    // 1️⃣ Generate 8–10 public image URLs using Google Search API
+    const imageUrls = await getImageUrls(title);
+
+    if (!imageUrls.length) {
+      return NextResponse.json(
+        { error: "Failed to fetch image URLs. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    // 2️⃣ Change the prompt to *use those URLs directly*
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
 You are helping generate structured content for a PowerPoint presentation using pptxgenjs.
 
-Input: ${title}
+Input Topic: "${title}"
+
+Use ONLY the following image URLs for slides:
+${imageUrls.map((u: string) => `- ${u}`).join("\n")}
 
 Task:
-1. Search or infer and provide 3–6 reference websites related to the title.
+1. Provide 3–6 reference websites related to the topic.
 2. Create a presentation plan of 5–8 slides.
    Each slide must have:
    - title (short, 3–6 words)
    - text (1–3 sentences, concise)
-   - image (direct, working image link in JPG/PNG/WebP format from a reliable source such as  Pexels,  or other open-license image hosts. Avoid homepage URLs, PDFs, or non-image links.)
-    
+   - image (choose only from the provided URLs above)
+
 Output JSON strictly in this format:
 {
   "references": ["url1", "url2", "url3"],
   "slides": [
-    { "title": "Slide 1 Title", "text": "Short content.", "image": "https://working-image-link.jpg"},
-    { "title": "Slide 2 Title", "text": "Short content.", "image": "https://working-image-link.jpg" }
+    { "title": "Slide 1 Title", "text": "Short content.", "image": "https://..." },
+    { "title": "Slide 2 Title", "text": "Short content.", "image": "https://..." }
   ]
 }
 No markdown, only JSON.
 `;
 
+    // 3️⃣ Generate structured content using Gemini
     const result = await model.generateContent(prompt);
     const response = await result.response;
-
     let text = await response.text();
 
-    // Clean up JSON (sometimes Gemini outputs ```json ... ```)
     if (text.startsWith("```")) {
       text = text.replace(/```json|```/g, "").trim();
     }
 
     const data: PPTData = JSON.parse(text);
 
-    const conversation = await prismaClient.conversation.create({ data:{
+    // 4️⃣ Store conversation in Prisma
+    const conversation = await prismaClient.conversation.create({
+      data: {
         title,
-        references:data.references, 
-        slides:{
-          create: data.slides.map(slide => ({
+        references: data.references,
+        slides: {
+          create: data.slides.map((slide) => ({
             ...slide,
-            image: slide.image ?? ""
-          }))
+            image: slide.image ?? "",
+          })),
+        },
+        msgs: {
+          create: [
+            {
+              sender: "user",
+              content: title,
+            },
+            {
+              sender: "bot",
+              content: `Fetched results about ${title} and generated structured PPT data.`,
+              references: data.references,
+            },
+          ],
+        },
+      },
+    });
 
-          },
-          msgs: {
-            create: [
-              {
-                sender: 'user',
-                content:title
-              },
-              {
-                sender:'bot',
-                content:`Fetched results about ${title} and showing preview. (Tip:currently this LLM halucinates about images, edit images using further prompts) Data Gathered From `,
-                references:data.references
-              }
-            ]
-          }
-        }
-      }
-     
-    )
-    const slides = await prismaClient.slide.findMany({ where: { conversationId: conversation.id } })
-    data.slides = slides
-    
+    // 5️⃣ Fetch created slides
+    const slides = await prismaClient.slide.findMany({
+      where: { conversationId: conversation.id },
+    });
+    data.slides = slides;
 
-    return new NextResponse(JSON.stringify({data,conversation_id: conversation.id}));
+    return NextResponse.json({ data, conversation_id: conversation.id });
   } catch (err: unknown) {
     console.error("Error generating PPT:", err);
-    if(err instanceof Error){
-    return NextResponse.json({ error: err.message }, { status: 500 });
-    }
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
