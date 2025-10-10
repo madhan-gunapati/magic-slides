@@ -7,6 +7,7 @@ import { title } from "process"
 import Link from "next/link"
 
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 interface ChatItem {
   source: 'user' | 'bot'
   msg: string
@@ -23,6 +24,7 @@ const Home = () => {
   const [downloading, setDownloading] = useState(false)
   const [conversation_id , setConversation_id] = useState('')
   const router = useRouter()
+  const {data, status} = useSession()
 
   const changeInputText = (e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)
 
@@ -123,7 +125,7 @@ const Home = () => {
       {!chatVisibility && 
         <div className="flex flex-col justify-center items-center h-screen text-center p-5">
           <div className="space-y-5 w-full max-w-3xl  p-8">
-            <h1 className="text-4xl font-extrabold"> Hello, User!</h1>
+            <h1 className="text-4xl font-extrabold"> Hello, {data?.user?.name || 'User'}!</h1>
             <p className="text-gray-600">What do you want me to generate today?</p>
             <div className="flex justify-center mt-5 w-full">
               <input

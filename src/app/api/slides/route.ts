@@ -127,7 +127,7 @@ No markdown, only JSON.
       },
     });
 
-    // 5️⃣ Fetch created slides
+    // Fetch created slides
     const slides = await prismaClient.slide.findMany({
       where: { conversationId: conversation.id },
     });
