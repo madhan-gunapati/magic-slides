@@ -5,7 +5,7 @@ import SlidePreview from "@/app/components/SlidePreview"
 import { v4 as uuidV4 } from "uuid"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-
+import { signOut } from "next-auth/react"
 interface ChatItem {
   sender: "user" | "bot"
   content: string
@@ -188,6 +188,13 @@ const changeData = async (text: string) => {
             </button>
              <Link href='/history'  className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition">History</Link>
             <Link href='/'  className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition">New Chat</Link>
+            <button
+                  type="button"
+                  className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition"
+                  onClick={()=>{signOut()}}
+                >
+                  signOut
+                </button>
           </div>
           <SlidePreview slides={slidesData} />
         </div>

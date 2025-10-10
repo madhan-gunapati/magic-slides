@@ -1,4 +1,6 @@
 'use client'
+import { useSession } from "next-auth/react"
+
 import { useEffect, useState } from "react"
 
 interface Conversation {
@@ -7,18 +9,38 @@ interface Conversation {
   createdAt: string
   references: string[]
 }
-
+type SessionUser = {
+    name?: string | null
+    email?: string | null
+    image?: string | null
+    id?: string | null
+  }
+  
 const History = () => {
   const [convList, setConvList] = useState<Conversation[]>([])
+  const {data }= useSession()
+  const sessionData = data as { user?: SessionUser }
+  const userId = sessionData?.user?.id
+  console.log('user id ', userId)
 
   useEffect(() => {
+    const url='/api/history/conversations'
+    const options = {
+        method:'POST',
+        headers:{
+            'content-Type':'Application/json',
+            'Accept':'Application/json',
+            
+        },
+        body:JSON.stringify({userId})
+    }
     const fetchData = async () => {
-      const res = await fetch('/api/history/conversations')
+      const res = await fetch(url, options)
       const jsRes = await res.json()
       setConvList(jsRes.msg)
     }
     fetchData()
-  }, [])
+  }, [userId])
 
   return (
     <div className="min-h-screen bg-white text-black flex items-center justify-center">

@@ -5,15 +5,23 @@ import { v4 as uuidV4 } from 'uuid'
 import SlidePreview from "./components/SlidePreview"
 import { title } from "process"
 import Link from "next/link"
-
+import { signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
+
 interface ChatItem {
   source: 'user' | 'bot'
   msg: string
   references?:string[]
 }
 
+type SessionUser = {
+    name?: string | null
+    email?: string | null
+    image?: string | null
+    id?: string | null
+  }
+  
 const Home = () => {
   const [input, setInput] = useState<string>('')
   const [chatVisibility, setChatVisibility] = useState<boolean>(false)
@@ -24,17 +32,22 @@ const Home = () => {
   const [downloading, setDownloading] = useState(false)
   const [conversation_id , setConversation_id] = useState('')
   const router = useRouter()
-  const {data, status} = useSession()
+  const {data} = useSession()
+  
+  
+  const sessionData = data as { user?: SessionUser }
+  
 
   const changeInputText = (e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)
 
   const fetchData = async (value: string) => {
     setLoading(true)
     try {
+      
       const res = await fetch('/api/slides', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: value })
+        body: JSON.stringify({ title: value , userId:sessionData?.user?.id })
       })
       const { data , conversation_id } = await res.json()
       setSlidesData(data.slides)
@@ -125,7 +138,7 @@ const Home = () => {
       {!chatVisibility && 
         <div className="flex flex-col justify-center items-center h-screen text-center p-5">
           <div className="space-y-5 w-full max-w-3xl  p-8">
-            <h1 className="text-4xl font-extrabold"> Hello, {data?.user?.name || 'User'}!</h1>
+            <h1 className="text-4xl font-extrabold"> Hello, {sessionData?.user?.name || 'User'}!</h1>
             <p className="text-gray-600">What do you want me to generate today?</p>
             <div className="flex justify-center mt-5 w-full">
               <input
@@ -225,6 +238,13 @@ const Home = () => {
                 </button>
                  <Link href='/history'  className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition">History</Link>
             <Link href='/'  className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition">New Chat</Link>
+            <button
+                  type="button"
+                  className="font-bold px-3 py-1 bg-black text-white rounded-lg shadow hover:opacity-90 transition"
+                  onClick={()=>{signOut()}}
+                >
+                signOut
+                </button>
               </div>
               <SlidePreview slides={slidesData} />
             </div>
