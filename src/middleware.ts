@@ -6,7 +6,7 @@ const allowedOrigins = ["https://magic-slides-1l22.vercel.app", "http://localhos
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  console.log('pathname is ' , pathname)
+  
 
   // --- CORS for API routes ---
   if (pathname.startsWith("/api")) {
@@ -33,8 +33,8 @@ export function middleware(req: NextRequest) {
 
    //  If user already logged in and tries to access /login -> redirect to home
   if (token && pathname==='/login') {
-    console.log(pathname , 'is [athname')
-    console.log('Tried accessing Login')
+    
+    
     return NextResponse.redirect(new URL("/", req.url));
   }
 

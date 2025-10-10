@@ -47,8 +47,8 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
 export async function POST(req: Request) {
   try {
-    const { title } = (await req.json()) as { title: string };
-
+    const { title , userId } = (await req.json()) as { title: string , userId:string };
+    console.log('user id from slides', userId)
     // 1️⃣ Generate 8–10 public image URLs using Google Search API
     const imageUrls = await getImageUrls(title);
 
@@ -104,6 +104,7 @@ No markdown, only JSON.
     const conversation = await prismaClient.conversation.create({
       data: {
         title,
+        userId,
         references: data.references,
         slides: {
           create: data.slides.map((slide) => ({
