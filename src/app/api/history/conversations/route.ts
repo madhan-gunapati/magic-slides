@@ -9,7 +9,7 @@ export async function POST(req:Request) {
     
     if(userId){
     const conv_list = await prismaClient.conversation.findMany({where:{userId:userId}})
-        
+   
     return NextResponse.json({msg:conv_list})
     }
     return NextResponse.json({msg:[]})

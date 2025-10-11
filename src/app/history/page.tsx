@@ -21,7 +21,7 @@ const History = () => {
   const {data }= useSession()
   const sessionData = data as { user?: SessionUser }
   const userId = sessionData?.user?.id
-  console.log('user id ', userId)
+  
 
   useEffect(() => {
     const url='/api/history/conversations'
