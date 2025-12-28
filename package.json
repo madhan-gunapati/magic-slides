@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-   "build": "prisma generate && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -16,7 +16,7 @@
     "googleapis": "^161.0.0",
     "jspdf": "^3.0.3",
     "lucide-react": "^0.544.0",
-    "next": "15.5.4",
+    "next": "15.5.9",
     "next-auth": "^4.24.11",
     "pptx-parser": "^1.1.7-beta.9",
     "pptxgenjs": "^4.0.1",
